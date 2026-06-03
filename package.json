@@ -1,0 +1,24 @@
+{
+  "name": "didactic-medieval",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/Islands-of-Eternal-Cats/didactic-medieval#readme",
+  "bugs": {
+    "url": "https://github.com/Islands-of-Eternal-Cats/didactic-medieval/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Islands-of-Eternal-Cats/didactic-medieval.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "init": "node ./node_modules/@fission-ai/openspec/bin/openspec.js init"
+  },
+  "dependencies": {
+    "@fission-ai/openspec": "^1.4.1"
+  }
+}
