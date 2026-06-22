@@ -14,8 +14,10 @@
   "author": "",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build:wasm": "wasm-pack build crates/core --target bundler --out-dir ../../pkg",
+    "dev:wasm": "cargo watch -w crates/core -s 'wasm-pack build crates/core --target bundler --out-dir ../../pkg'",
+    "dev": "npm run build:wasm && concurrently \"npm run dev:wasm\" \"vite\"",
+    "build": "npm run build:wasm && tsc -b && vite build",
     "preview": "vite preview",
     "init": "node ./node_modules/@fission-ai/openspec/bin/openspec.js init"
   },
@@ -28,7 +30,10 @@
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@vitejs/plugin-react": "^4.5.2",
+    "concurrently": "^9.1.2",
     "typescript": "~5.8.3",
-    "vite": "^6.3.5"
+    "vite": "^6.3.5",
+    "vite-plugin-top-level-await": "^1.6.0",
+    "vite-plugin-wasm": "^3.6.0"
   }
 }

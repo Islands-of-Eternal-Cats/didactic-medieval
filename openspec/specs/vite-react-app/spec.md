@@ -1,3 +1,11 @@
+# vite-react-app Specification
+
+## Purpose
+
+Минимальный SPA на Vite + React: dev-сервер, production-сборка и UI, интегрированный с WASM-модулем для отображения приветствия.
+
+## Requirements
+
 ### Requirement: Development server
 
 The project SHALL provide a Vite development server that serves the React application with hot module replacement.
@@ -25,12 +33,13 @@ The project SHALL produce a static production build via Vite.
 
 ### Requirement: Hello World UI
 
-The application SHALL render a visible hello world message as the primary content of the default route.
+The application SHALL render a visible hello world message as the primary content of the default route. The greeting text SHALL be obtained by calling `getProgramName()` from the Rust WASM module (`crates/core` / `pkg/`), not from a hardcoded string literal in React source.
 
-#### Scenario: Default page shows greeting
+#### Scenario: Default page shows greeting from WASM
 
-- **WHEN** the user opens the application root URL in a browser
+- **WHEN** the user opens the application root URL in a browser after WASM has loaded
 - **THEN** the page displays text containing "Hello" (case-insensitive match acceptable, e.g. "Hello World")
+- **THEN** the displayed greeting matches the return value of `getProgramName()` from the WASM module
 
 ### Requirement: React root mount
 
