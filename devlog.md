@@ -28,6 +28,17 @@ npm run build        # build:wasm + TypeScript + Vite production
 
 Приветствие на странице берётся из `getProgramName()` в WASM-модуле `crates/core`.
 
+## ECS и юниты
+
+`crates/core` использует `bevy_ecs` для хранения юнитов с компонентом `Position`. WASM API:
+
+- `createGameWorld(unitCount, seed)` — спавн юнитов со случайными позициями в поле 800×600 (seed — `bigint` в JS)
+- `getUnitPositions()` — JSON-массив `[{ "id", "x", "y" }, ...]`
+
+Фронтенд рисует 50 юнитов на `<canvas>` (`src/UnitsCanvas.tsx`). Кнопка «Перегенерировать» создаёт новый мир с другим seed.
+
+Зависимости Rust: `bevy_ecs`, `rand`, `getrandom` (feature `js` для WASM).
+
 ## Build version
 
 Номер версии каждого слоя — компактная дата-время UTC (`YYYYMMDD.HHMMSS`) последнего git-коммита, затронувшего этот слой:

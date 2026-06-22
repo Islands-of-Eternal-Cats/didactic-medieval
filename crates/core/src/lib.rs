@@ -1,4 +1,9 @@
+mod components;
+mod world;
+
 use wasm_bindgen::prelude::*;
+
+pub use world::{create_game_world, GameWorld};
 
 #[wasm_bindgen(js_name = getProgramName)]
 pub fn get_program_name() -> String {
