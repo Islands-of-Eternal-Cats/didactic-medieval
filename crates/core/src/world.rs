@@ -4,7 +4,11 @@ use rand::rngs::StdRng;
 use wasm_bindgen::prelude::*;
 
 use crate::components::{Position, Speed, UnitId};
-use crate::systems::{move_towards_target, random_target, DEFAULT_SPEED, MAX_DELTA_MS};
+use crate::events::TargetReached;
+use crate::resources::{DeltaTime, SimulationRng};
+use crate::systems::{
+    assign_random_target, move_towards_target, random_target, DEFAULT_SPEED, MAX_DELTA_MS,
+};
 
 pub const FIELD_WIDTH: f32 = 800.0;
 pub const FIELD_HEIGHT: f32 = 600.0;
@@ -12,13 +16,15 @@ pub const FIELD_HEIGHT: f32 = 600.0;
 #[wasm_bindgen]
 pub struct GameWorld {
     world: World,
-    rng: StdRng,
+    schedule: Schedule,
 }
 
 #[wasm_bindgen(js_name = createGameWorld)]
 pub fn create_game_world(unit_count: u32, seed: u64) -> GameWorld {
     let mut world = World::new();
     let mut rng = StdRng::seed_from_u64(seed);
+
+    world.init_resource::<Messages<TargetReached>>();
 
     for id in 0..unit_count {
         let x = rng.gen_range(0.0..FIELD_WIDTH);
@@ -32,7 +38,12 @@ pub fn create_game_world(unit_count: u32, seed: u64) -> GameWorld {
         ));
     }
 
-    GameWorld { world, rng }
+    world.insert_resource(SimulationRng(rng));
+
+    let mut schedule = Schedule::default();
+    schedule.add_systems((move_towards_target, assign_random_target).chain());
+
+    GameWorld { world, schedule }
 }
 
 #[wasm_bindgen]
@@ -41,7 +52,11 @@ impl GameWorld {
     pub fn tick(&mut self, delta_ms: f32) {
         let capped = delta_ms.min(MAX_DELTA_MS);
         let delta_secs = capped / 1000.0;
-        move_towards_target(&mut self.world, &mut self.rng, delta_secs);
+        self.world.insert_resource(DeltaTime(delta_secs));
+        self.schedule.run(&mut self.world);
+        self.world
+            .resource_mut::<Messages<TargetReached>>()
+            .update();
     }
 
     #[wasm_bindgen(js_name = getUnitPositions)]

@@ -3,6 +3,8 @@ use rand::Rng;
 use rand::rngs::StdRng;
 
 use crate::components::{Position, Speed, Target};
+use crate::events::TargetReached;
+use crate::resources::{DeltaTime, SimulationRng};
 use crate::world::{FIELD_HEIGHT, FIELD_WIDTH};
 
 pub const DEFAULT_SPEED: f32 = 60.0;
@@ -16,18 +18,20 @@ pub fn random_target(rng: &mut StdRng) -> Target {
     }
 }
 
-pub fn move_towards_target(world: &mut World, rng: &mut StdRng, delta_secs: f32) {
-    let mut query = world.query::<(&mut Position, &mut Target, &Speed)>();
+pub fn move_towards_target(
+    mut writer: MessageWriter<TargetReached>,
+    time: Res<DeltaTime>,
+    mut query: Query<(Entity, &mut Position, &Target, &Speed)>,
+) {
+    let delta_secs = time.0;
 
-    for (mut pos, mut target, speed) in query.iter_mut(world) {
+    for (entity, mut pos, target, speed) in query.iter_mut() {
         let dx = target.x - pos.x;
         let dy = target.y - pos.y;
         let dist_sq = dx * dx + dy * dy;
 
         if dist_sq < ARRIVAL_THRESHOLD * ARRIVAL_THRESHOLD {
-            let new_target = random_target(rng);
-            target.x = new_target.x;
-            target.y = new_target.y;
+            writer.write(TargetReached { entity });
             continue;
         }
 
@@ -38,5 +42,17 @@ pub fn move_towards_target(world: &mut World, rng: &mut StdRng, delta_secs: f32)
 
         pos.x = pos.x.clamp(0.0, FIELD_WIDTH);
         pos.y = pos.y.clamp(0.0, FIELD_HEIGHT);
+    }
+}
+
+pub fn assign_random_target(
+    mut reader: MessageReader<TargetReached>,
+    mut targets: Query<&mut Target>,
+    mut rng: ResMut<SimulationRng>,
+) {
+    for event in reader.read() {
+        if let Ok(mut target) = targets.get_mut(event.entity) {
+            *target = random_target(&mut rng.0);
+        }
     }
 }

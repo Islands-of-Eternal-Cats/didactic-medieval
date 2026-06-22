@@ -36,11 +36,11 @@ npm run build        # build:wasm + TypeScript + Vite production
 - `getUnitPositions()` — JSON-массив `[{ "id", "x", "y" }, ...]`
 - `tick(deltaMs)` — один шаг симуляции: движение к цели со скоростью 60 px/s, при достижении — новая случайная цель
 
-Система `move_towards_target` в `systems.rs` обновляет позиции каждый тик.
+Системы `move_towards_target` и `assign_random_target` в `systems.rs` связаны сообщением `TargetReached` через ECS message bus (`Messages<TargetReached>`). При достижении цели movement-система отправляет сообщение; assign-система назначает новую случайную цель. Системы запускаются через `Schedule` в `GameWorld::tick`.
 
 Фронтенд рисует 50 юнитов на `<canvas>` (`src/UnitsCanvas.tsx`) в цикле `requestAnimationFrame`: `tick` + перерисовка. Кнопка «Перегенерировать» создаёт новый мир с другим seed.
 
-Зависимости Rust: `bevy_ecs`, `rand`, `getrandom` (feature `js` для WASM).
+Зависимости Rust: `bevy_ecs` 0.19, `rand`, `getrandom` (feature `js` для WASM).
 
 ## Build version
 

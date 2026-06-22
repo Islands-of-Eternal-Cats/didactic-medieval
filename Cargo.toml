@@ -4,6 +4,6 @@ resolver = "2"
 
 [workspace.dependencies]
 wasm-bindgen = "0.2"
-bevy_ecs = { version = "0.16", default-features = false }
+bevy_ecs = { version = "0.19", default-features = false }
 rand = { version = "0.8", features = ["std_rng"] }
 getrandom = { version = "0.2", features = ["js"] }
