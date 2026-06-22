@@ -1,4 +1,5 @@
 mod components;
+mod systems;
 mod world;
 
 use wasm_bindgen::prelude::*;

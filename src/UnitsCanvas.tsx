@@ -59,10 +59,23 @@ export function UnitsCanvas({ seed, onRegenerate }: UnitsCanvasProps) {
     worldRef.current?.free()
     const world = createGameWorld(DEFAULT_UNIT_COUNT, BigInt(seed))
     worldRef.current = world
-    const units = parseUnitPositions(world.getUnitPositions())
-    drawUnits(ctx, units)
+
+    let rafId = 0
+    let lastTime = performance.now()
+
+    const frame = (now: number) => {
+      const deltaMs = now - lastTime
+      lastTime = now
+      world.tick(deltaMs)
+      const units = parseUnitPositions(world.getUnitPositions())
+      drawUnits(ctx, units)
+      rafId = requestAnimationFrame(frame)
+    }
+
+    rafId = requestAnimationFrame(frame)
 
     return () => {
+      cancelAnimationFrame(rafId)
       worldRef.current?.free()
       worldRef.current = null
     }

@@ -30,12 +30,15 @@ npm run build        # build:wasm + TypeScript + Vite production
 
 ## ECS и юниты
 
-`crates/core` использует `bevy_ecs` для хранения юнитов с компонентом `Position`. WASM API:
+`crates/core` использует `bevy_ecs` для хранения юнитов. Компоненты: `Position`, `Target`, `Speed`, `UnitId`. WASM API:
 
-- `createGameWorld(unitCount, seed)` — спавн юнитов со случайными позициями в поле 800×600 (seed — `bigint` в JS)
+- `createGameWorld(unitCount, seed)` — спавн юнитов со случайными позициями и целями в поле 800×600 (seed — `bigint` в JS)
 - `getUnitPositions()` — JSON-массив `[{ "id", "x", "y" }, ...]`
+- `tick(deltaMs)` — один шаг симуляции: движение к цели со скоростью 60 px/s, при достижении — новая случайная цель
 
-Фронтенд рисует 50 юнитов на `<canvas>` (`src/UnitsCanvas.tsx`). Кнопка «Перегенерировать» создаёт новый мир с другим seed.
+Система `move_towards_target` в `systems.rs` обновляет позиции каждый тик.
+
+Фронтенд рисует 50 юнитов на `<canvas>` (`src/UnitsCanvas.tsx`) в цикле `requestAnimationFrame`: `tick` + перерисовка. Кнопка «Перегенерировать» создаёт новый мир с другим seed.
 
 Зависимости Rust: `bevy_ecs`, `rand`, `getrandom` (feature `js` для WASM).
 
