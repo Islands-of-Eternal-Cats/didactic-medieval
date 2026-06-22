@@ -1,6 +1,9 @@
 /// <reference types="vite/client" />
 
-declare const __FRONTEND_BUILD_INFO__: {
-  layer: 'frontend'
-  version: string
+declare module 'virtual:frontend-build-info' {
+  const info: {
+    layer: 'frontend'
+    version: string
+  }
+  export default info
 }

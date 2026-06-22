@@ -15,7 +15,7 @@
   "type": "module",
   "scripts": {
     "build:wasm": "wasm-pack build crates/core --target bundler --out-dir ../../pkg",
-    "dev:wasm": "cargo watch -w crates/core -s 'wasm-pack build crates/core --target bundler --out-dir ../../pkg'",
+    "dev:wasm": "cargo watch -w crates/core -w .git/HEAD -w .git/refs/heads -s 'wasm-pack build crates/core --target bundler --out-dir ../../pkg'",
     "dev": "npm run build:wasm && concurrently \"npm run dev:wasm\" \"vite\"",
     "build": "npm run build:wasm && tsc -b && vite build",
     "preview": "vite preview",

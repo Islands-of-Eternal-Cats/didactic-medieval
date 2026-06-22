@@ -1,3 +1,4 @@
+import frontendBuildInfo from 'virtual:frontend-build-info'
 import { getCoreBuildInfo } from '../pkg/core'
 
 export type BuildInfo = {
@@ -11,7 +12,7 @@ export type CombinedBuildInfo = {
 }
 
 export function getFrontendBuildInfo(): BuildInfo {
-  return __FRONTEND_BUILD_INFO__
+  return frontendBuildInfo
 }
 
 export function getBuildInfo(): CombinedBuildInfo {
