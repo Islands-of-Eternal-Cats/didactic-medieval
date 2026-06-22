@@ -27,3 +27,21 @@ npm run build        # build:wasm + TypeScript + Vite production
 ```
 
 Приветствие на странице берётся из `getProgramName()` в WASM-модуле `crates/core`.
+
+## Build version
+
+Номер версии каждого слоя — компактная дата-время UTC (`YYYYMMDD.HHMMSS`) последнего git-коммита, затронувшего этот слой:
+
+- **frontend** — последний коммит по `src/`
+- **core** — последний коммит по `crates/core/`
+
+В футере приложения и через API (`getFrontendBuildInfo()`, `getCoreBuildInfo()`, `getBuildInfo()`).
+
+Сверка с git:
+
+```bash
+TZ=UTC git log -1 --format=%cd --date=format:%Y%m%d.%H%M%S -- src/
+TZ=UTC git log -1 --format=%cd --date=format:%Y%m%d.%H%M%S -- crates/core/
+```
+
+Если git недоступен — версия `unknown`.
