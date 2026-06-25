@@ -1,165 +1,36 @@
-export const TILE_SIZE = 32
+import tilemapUrl from './assets/tilemap.png'
+
+export const TILE_SIZE = 16
 export const COLS = 25
 export const ROWS = 19
 
-const GRASS_BASE = [
-  '#3a7d32', '#3a8035', '#3a7a2f', '#3b7e33',
-]
-const GRASS_DARK = '#2d5a27'
-const GRASS_LIGHT = '#4a8d3a'
+const SHEET_COLS = 12
+const SHEET_ROWS = 11
+const PADDING = 1
 
-function seededRandom(seed: number): () => number {
-  let s = seed
-  return () => {
-    s = (s * 1664525 + 1013904223) & 0xffffffff
-    return (s >>> 0) / 0x100000000
-  }
-}
+export const GRASS_INDICES = [0, 1, 2, 25, 39, 40, 41, 42, 43]
+export const WATER_INDEX = 48
+export const STONE_INDEX = 109
 
-function grassTexture(rng: () => number): HTMLCanvasElement {
-  const canvas = document.createElement('canvas')
-  canvas.width = TILE_SIZE
-  canvas.height = TILE_SIZE
-  const ctx = canvas.getContext('2d')!
-  const base = GRASS_BASE[Math.floor(rng() * GRASS_BASE.length)]
-  ctx.fillStyle = base
-  ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE)
-  for (let i = 0; i < 60; i++) {
-    const x = Math.floor(rng() * TILE_SIZE)
-    const y = Math.floor(rng() * TILE_SIZE)
-    ctx.fillStyle = rng() > 0.5 ? GRASS_DARK : GRASS_LIGHT
-    ctx.fillRect(x, y, 1, 1)
-  }
-  ctx.fillStyle = GRASS_DARK
-  ctx.fillRect(0, 0, TILE_SIZE, 1)
-  ctx.fillRect(0, 0, 1, TILE_SIZE)
-  return canvas
-}
+export async function loadTileSheet(): Promise<HTMLCanvasElement[]> {
+  const img = new Image()
+  img.src = tilemapUrl
+  await img.decode()
 
-function bushDecoration(rng: () => number): HTMLCanvasElement {
-  const canvas = document.createElement('canvas')
-  canvas.width = TILE_SIZE
-  canvas.height = TILE_SIZE
-  const ctx = canvas.getContext('2d')!
-  const cx = 6 + Math.floor(rng() * 12)
-  const cy = 6 + Math.floor(rng() * 10)
-  const size = 6 + Math.floor(rng() * 4)
-  ctx.fillStyle = '#2d6b2d'
-  for (let dy = -size; dy <= size; dy++) {
-    for (let dx = -size; dx <= size; dx++) {
-      if (dx * dx + dy * dy < size * size && rng() > 0.3) {
-        ctx.fillRect(cx + dx, cy + dy, 1, 1)
-      }
+  const tiles: HTMLCanvasElement[] = []
+  for (let row = 0; row < SHEET_ROWS; row++) {
+    for (let col = 0; col < SHEET_COLS; col++) {
+      const sx = col * (TILE_SIZE + PADDING)
+      const sy = row * (TILE_SIZE + PADDING)
+      const canvas = document.createElement('canvas')
+      canvas.width = TILE_SIZE
+      canvas.height = TILE_SIZE
+      const ctx = canvas.getContext('2d')!
+      ctx.drawImage(img, sx, sy, TILE_SIZE, TILE_SIZE, 0, 0, TILE_SIZE, TILE_SIZE)
+      tiles.push(canvas)
     }
   }
-  ctx.fillStyle = '#4a9d4a'
-  for (let i = 0; i < 4; i++) {
-    ctx.fillRect(
-      cx + Math.floor(rng() * size * 2) - size,
-      cy + Math.floor(rng() * size * 2) - size,
-      1, 1,
-    )
-  }
-  return canvas
-}
-
-function flowerDecoration(rng: () => number, color: string): HTMLCanvasElement {
-  const canvas = document.createElement('canvas')
-  canvas.width = TILE_SIZE
-  canvas.height = TILE_SIZE
-  const ctx = canvas.getContext('2d')!
-  const cx = 8 + Math.floor(rng() * 14)
-  const cy = 8 + Math.floor(rng() * 12)
-  ctx.fillStyle = color
-  const petalOffsets = [[0, -1], [0, 1], [-1, 0], [1, 0], [0, 0]]
-  for (const [dx, dy] of petalOffsets) {
-    ctx.fillRect(cx + dx, cy + dy, 1, 1)
-  }
-  ctx.fillStyle = '#ffdd00'
-  ctx.fillRect(cx, cy, 1, 1)
-  return canvas
-}
-
-export function rockTexture(rng: () => number): HTMLCanvasElement {
-  const canvas = document.createElement('canvas')
-  canvas.width = TILE_SIZE
-  canvas.height = TILE_SIZE
-  const ctx = canvas.getContext('2d')!
-  ctx.fillStyle = '#5a5a6e'
-  ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE)
-  for (let i = 0; i < 40; i++) {
-    const x = Math.floor(rng() * TILE_SIZE)
-    const y = Math.floor(rng() * TILE_SIZE)
-    ctx.fillStyle = rng() > 0.5 ? '#6a6a7e' : '#4a4a5e'
-    ctx.fillRect(x, y, 1, 1)
-  }
-  ctx.fillStyle = '#3a3a4e'
-  for (let i = 0; i < 3; i++) {
-    const x = Math.floor(rng() * (TILE_SIZE - 6)) + 3
-    const y = Math.floor(rng() * (TILE_SIZE - 6)) + 3
-    const len = 3 + Math.floor(rng() * 5)
-    const horiz = rng() > 0.5
-    for (let j = 0; j < len; j++) {
-      ctx.fillRect(horiz ? x + j : x, horiz ? y : y + j, 1, 1)
-    }
-  }
-  ctx.fillStyle = '#3a3a4e'
-  ctx.fillRect(0, 0, TILE_SIZE, 1)
-  ctx.fillRect(0, 0, 1, TILE_SIZE)
-  return canvas
-}
-
-export function waterTile(): HTMLCanvasElement {
-  const canvas = document.createElement('canvas')
-  canvas.width = TILE_SIZE
-  canvas.height = TILE_SIZE
-  const ctx = canvas.getContext('2d')!
-  ctx.fillStyle = '#1a2a4e'
-  ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE)
-  for (let row = 0; row < TILE_SIZE; row += 4) {
-    ctx.fillStyle = '#2a4a6e'
-    ctx.fillRect(0, row, TILE_SIZE, 1)
-  }
-  return canvas
-}
-
-const WATER_HIGHLIGHT = '#4a8aff'
-
-export function drawWaterOverlay(ctx: CanvasRenderingContext2D, x: number, y: number, time: number) {
-  const hx = ((time * 60) % (TILE_SIZE - 4)) + 2
-  const hy = (time * 100) % TILE_SIZE
-  ctx.fillStyle = WATER_HIGHLIGHT
-  ctx.fillRect(x + hx, y + hy, 1, 1)
-  ctx.fillRect(x + ((hx + 8) % TILE_SIZE), y + ((hy + 4) % TILE_SIZE), 1, 1)
-}
-
-export type TileVariant = {
-  type: 'grass'
-  image: HTMLCanvasElement
-  decoration?: HTMLCanvasElement
-}
-
-export function generateTileVariants(seed: number): TileVariant[][] {
-  const variants: TileVariant[][] = []
-  for (let row = 0; row < ROWS; row++) {
-    const rowVariants: TileVariant[] = []
-    for (let col = 0; col < COLS; col++) {
-      const tileRng = seededRandom(seed + col * 7 + row * 31)
-      const image = grassTexture(tileRng) as HTMLCanvasElement
-      let decoration: HTMLCanvasElement | undefined
-      if (tileRng() < 0.2) {
-        const decoRng = seededRandom(seed + col * 13 + row * 37)
-        if (decoRng() > 0.5) {
-          decoration = bushDecoration(decoRng) as HTMLCanvasElement
-        } else {
-          decoration = flowerDecoration(decoRng, '#e94560') as HTMLCanvasElement
-        }
-      }
-      rowVariants.push({ type: 'grass', image, decoration })
-    }
-    variants.push(rowVariants)
-  }
-  return variants
+  return tiles
 }
 
 const UNIT_COLORS = ['#e94560', '#4a9eff', '#ffd700', '#7c3aed', '#22c55e', '#f97316']

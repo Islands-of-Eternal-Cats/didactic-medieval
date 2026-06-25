@@ -8,8 +8,8 @@ use crate::events::TargetReached;
 use crate::resources::{DeltaTime, SimulationRng, TileMapResource};
 use crate::systems::{find_path_action, move_along_path, DEFAULT_SPEED, MAX_DELTA_MS};
 
-pub const FIELD_WIDTH: f32 = 800.0;
-pub const FIELD_HEIGHT: f32 = 608.0;
+pub const FIELD_WIDTH: f32 = 25.0;
+pub const FIELD_HEIGHT: f32 = 19.0;
 
 #[wasm_bindgen]
 pub struct GameWorld {

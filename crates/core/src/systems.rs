@@ -8,8 +8,8 @@ use crate::resources::{DeltaTime, SimulationRng, TileMapResource};
 use crate::world::FIELD_HEIGHT;
 use crate::world::FIELD_WIDTH;
 
-pub const DEFAULT_SPEED: f32 = 60.0;
-pub const ARRIVAL_THRESHOLD: f32 = 2.0;
+pub const DEFAULT_SPEED: f32 = 3.75;
+pub const ARRIVAL_THRESHOLD: f32 = 0.125;
 pub const MAX_DELTA_MS: f32 = 100.0;
 pub const MAX_RETARGET_ATTEMPTS: u32 = 20;
 

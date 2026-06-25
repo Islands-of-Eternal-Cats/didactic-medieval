@@ -1,10 +1,6 @@
 # Tile Map Rendering
 
-## Purpose
-
-Render the game field by compositing cached tile textures and unit sprites onto a DPR-aware canvas with nearest-neighbor scaling and CSS 2× integer scale.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Tile map caching
 The system SHALL pre-render all tile textures into a cache at initialization.
@@ -14,7 +10,7 @@ The system SHALL pre-render all tile textures into a cache at initialization.
 - **THEN** it SHALL build a 2D cache array matching map dimensions
 - **THEN** each cache entry SHALL reference a tile canvas from the Tiny Town spritesheet
 - **THEN** walkable tiles (`G`) SHALL use a random grass variant from the Kenney tileset
-- **THEN** non-walkable tiles (`B`) SHALL use water (index 48) or stone (index 109), chosen randomly per tile
+- **THEN** non-walkable tiles (`B`) SHALL use water (index 48) or stone (index 96), chosen randomly per tile
 
 ### Requirement: Frame rendering
 The system SHALL render a complete frame by compositing cached tile textures and unit sprites.

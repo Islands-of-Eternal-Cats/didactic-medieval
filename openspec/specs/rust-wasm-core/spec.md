@@ -3,7 +3,9 @@
 ## Purpose
 
 Rust/WASM-модуль `crates/core`: Cargo workspace, сборка в `pkg/`, API `getProgramName()` для связки TypeScript ↔ Rust.
+
 ## Requirements
+
 ### Requirement: Cargo workspace
 
 The repository SHALL define a Cargo workspace at the repository root with `crates/core` as a workspace member.
@@ -67,13 +69,13 @@ The WASM module SHALL export a function named `getCoreBuildInfo` that returns a 
 
 ### Requirement: ECS game world
 
-The `crates/core` WASM module SHALL maintain a `bevy_ecs::World` containing unit entities. Each unit entity SHALL have a `Position` component with `x` and `y` fields as `f32` values in the range `[0, FIELD_WIDTH)` and `[0, FIELD_HEIGHT)` respectively, where `FIELD_WIDTH` is 800 and `FIELD_HEIGHT` is 608. Each spawned unit's position SHALL lie on a walkable tile of the world's `TileMapResource` (the tile containing the position has `is_walkable == true`).
+The `crates/core` WASM module SHALL maintain a `bevy_ecs::World` containing unit entities. Each unit entity SHALL have a `Position` component with `x` and `y` fields as `f32` values in the range `[0, FIELD_WIDTH)` and `[0, FIELD_HEIGHT)` respectively, where `FIELD_WIDTH` is 25 (in tile units) and `FIELD_HEIGHT` is 19 (in tile units). Each spawned unit's position SHALL lie on a walkable tile of the world's `TileMapResource`.
 
 #### Scenario: World contains spawned units
 
 - **WHEN** `createGameWorld(unitCount, seed)` is called with `unitCount` greater than 0
 - **THEN** the internal ECS world contains exactly `unitCount` entities with a `Position` component
-- **THEN** each position has `0 <= x < 800` and `0 <= y < 608`
+- **THEN** each position has `0 <= x < 25` and `0 <= y < 19`
 
 #### Scenario: Spawned units are on walkable tiles
 
@@ -107,7 +109,7 @@ The WASM module SHALL export a method `getUnitPositions` on the game world handl
 
 - **WHEN** a game world is created and `getUnitPositions()` is called
 - **THEN** parsing the result yields an array of objects each with numeric `id`, `x`, and `y`
-- **THEN** all `x` and `y` values are within the field bounds (0..800, 0..608)
+- **THEN** all `x` and `y` values are within the field bounds (0..25, 0..19)
 
 #### Scenario: Positions are on walkable tiles
 
@@ -125,18 +127,17 @@ The root `Cargo.toml` SHALL declare `bevy_ecs` and `rand` under `[workspace.depe
 
 ### Requirement: Target and Speed components
 
-Each unit entity in the ECS world SHALL have a `Target` component with `x` and `y` fields (`f32`, within field bounds) and a `Speed` component (`f32`, pixels per second).
+Each unit entity in the ECS world SHALL have a `Target` component with `x` and `y` fields (`f32`, within field bounds) and a `Speed` component (`f32`, in tile-units per second).
 
 #### Scenario: Spawned units have target and speed
 
 - **WHEN** `createGameWorld(unitCount, seed)` is called with `unitCount` greater than 0
 - **THEN** each spawned unit entity has `Position`, `Target`, and `Speed` components
-- **THEN** each `Target` has `0 <= x < 800` and `0 <= y < 600`
-- **THEN** each `Speed` value is greater than 0
+- **THEN** each `Speed` value is 3.75 tile-units/second
 
 ### Requirement: Movement system
 
-The ECS world SHALL include a movement system that updates each unit's `Position` toward its `Target` at the rate defined by `Speed`, given a `delta_time` in seconds. Upon arrival, the movement system SHALL send a `TargetReached` message rather than directly reassigning the target.
+The ECS world SHALL include a movement system that updates each unit's `Position` toward its `Target` at the rate defined by `Speed`, given a `delta_time` in seconds. Upon arrival (within 0.125 tile-units of target), the movement system SHALL send a `TargetReached` message rather than directly reassigning the target.
 
 #### Scenario: Position moves toward target
 
@@ -146,9 +147,8 @@ The ECS world SHALL include a movement system that updates each unit's `Position
 
 #### Scenario: Unit arrives at target
 
-- **WHEN** a unit's `Position` is within the arrival threshold of its `Target` during a `tick` call
+- **WHEN** a unit's `Position` is within 0.125 tile-units of its `Target` during a `tick` call
 - **THEN** the movement system sends a `TargetReached` message for that entity
-- **THEN** a new random `Target` is assigned by `assign_random_target` in the same tick
 
 ### Requirement: Target reached message
 
@@ -163,7 +163,7 @@ The ECS world SHALL maintain a `Messages<TargetReached>` resource. When a unit's
 #### Scenario: Assign system sets new target
 
 - **WHEN** a `TargetReached` message is sent during a `tick` call
-- **THEN** `assign_random_target` assigns a new random `Target` to that entity within field bounds (0..800, 0..600)
+- **THEN** `assign_random_target` assigns a new random `Target` to that entity within field bounds (0..25, 0..19)
 - **THEN** the new target is assigned in the same tick, before `Messages<TargetReached>::update()` is called
 
 ### Requirement: tick API
@@ -180,3 +180,18 @@ The WASM module SHALL export a method `tick` on the game world handle that accep
 - **WHEN** two game worlds are created with `createGameWorld(50, 42)` and receive the same sequence of `tick(deltaMs)` calls
 - **THEN** `getUnitPositions()` returns identical JSON after each tick in both worlds
 
+### Requirement: TileMapResource coordinates
+
+`TileMapResource` SHALL not store or expose a `TILE_SIZE` constant. Coordinate conversion methods SHALL operate in tile units:
+- `world_to_tile(x, y)`: SHALL return `(x.floor() as u32, y.floor() as u32)`
+- `tile_to_world(col, row)`: SHALL return `(col as f32 + 0.5, row as f32 + 0.5)`
+
+#### Scenario: world_to_tile converts tile-units to grid
+
+- **WHEN** `world_to_tile(5.3, 3.7)` is called
+- **THEN** it returns `(5, 3)`
+
+#### Scenario: tile_to_world returns tile center
+
+- **WHEN** `tile_to_world(5, 3)` is called
+- **THEN** it returns `(5.5, 3.5)`

@@ -1,16 +1,10 @@
 # Pixel Art Tiles (Replaced)
 
-## Purpose
-
-Generate procedural pixel-art tile textures for the game map grid, including terrain variants with decorations and animated effects.
-
-**All requirements replaced by Kenney Tileset — see `specs/kenney-tileset/spec.md`.**
-
 ## REMOVED Requirements
 
 ### Requirement: Grass tile generation
 **Reason**: Replaced by Tiny Town spritesheet — all tile textures are now loaded from the pre-made tileset, not procedurally generated.
-**Migration**: Walkable tiles now show a Tiny Town grass tile variant (indices 0, 1, 2, 25, 39, 40, 41, 42, 43). No procedural noise or decorations.
+**Migration**: Walkable tiles now show a Tiny Town grass tile variant (indices 0, 1, 2, 4, 5, 16, 28). No procedural noise or decorations.
 
 #### Scenario: Grass tile has random noise pixels
 - **WHEN** a grass tile is generated
@@ -29,7 +23,7 @@ Generate procedural pixel-art tile textures for the game map grid, including ter
 - **THEN** it SHALL include a yellow center pixel at the flower center
 
 ### Requirement: Rock tile generation
-**Reason**: Replaced by Tiny Town stone tile (index 109).
+**Reason**: Replaced by Tiny Town stone tile (index 96).
 **Migration**: Blocked tiles assigned the stone type now show a Tiny Town stone wall tile instead of procedural rock texture.
 
 #### Scenario: Rock tile has noise and cracks
