@@ -3,15 +3,13 @@ use rand::{Rng, SeedableRng};
 use rand::rngs::StdRng;
 use wasm_bindgen::prelude::*;
 
-use crate::components::{Position, Speed, UnitId};
+use crate::components::{Path, Position, Speed, UnitId};
 use crate::events::TargetReached;
-use crate::resources::{DeltaTime, SimulationRng};
-use crate::systems::{
-    assign_random_target, move_towards_target, random_target, DEFAULT_SPEED, MAX_DELTA_MS,
-};
+use crate::resources::{DeltaTime, SimulationRng, TileMapResource};
+use crate::systems::{find_path_action, move_along_path, DEFAULT_SPEED, MAX_DELTA_MS};
 
 pub const FIELD_WIDTH: f32 = 800.0;
-pub const FIELD_HEIGHT: f32 = 600.0;
+pub const FIELD_HEIGHT: f32 = 608.0;
 
 #[wasm_bindgen]
 pub struct GameWorld {
@@ -24,16 +22,17 @@ pub fn create_game_world(unit_count: u32, seed: u64) -> GameWorld {
     let mut world = World::new();
     let mut rng = StdRng::seed_from_u64(seed);
 
+    let tile_map = TileMapResource::new(seed);
     world.init_resource::<Messages<TargetReached>>();
+    world.insert_resource(tile_map);
 
     for id in 0..unit_count {
         let x = rng.gen_range(0.0..FIELD_WIDTH);
         let y = rng.gen_range(0.0..FIELD_HEIGHT);
-        let target = random_target(&mut rng);
         world.spawn((
             UnitId(id),
             Position { x, y },
-            target,
+            Path { waypoints: Vec::new() },
             Speed(DEFAULT_SPEED),
         ));
     }
@@ -41,7 +40,7 @@ pub fn create_game_world(unit_count: u32, seed: u64) -> GameWorld {
     world.insert_resource(SimulationRng(rng));
 
     let mut schedule = Schedule::default();
-    schedule.add_systems((move_towards_target, assign_random_target).chain());
+    schedule.add_systems((find_path_action, move_along_path).chain());
 
     GameWorld { world, schedule }
 }
@@ -57,6 +56,25 @@ impl GameWorld {
         self.world
             .resource_mut::<Messages<TargetReached>>()
             .update();
+    }
+
+    #[wasm_bindgen(js_name = getTileMap)]
+    pub fn get_tile_map(&self) -> String {
+        let map = self.world.resource::<TileMapResource>();
+        let mut json = String::from(r#"{"cols":25,"rows":19,"tiles":["#);
+        for row in 0..map.rows {
+            if row > 0 {
+                json.push(',');
+            }
+            json.push('"');
+            for col in 0..map.cols {
+                let idx = (row * map.cols + col) as usize;
+                json.push(if map.tiles[idx] { 'G' } else { 'B' });
+            }
+            json.push('"');
+        }
+        json.push_str("]}");
+        json
     }
 
     #[wasm_bindgen(js_name = getUnitPositions)]
