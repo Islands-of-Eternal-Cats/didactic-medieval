@@ -22,6 +22,7 @@ impl TileMapResource {
     pub const ROWS: u32 = 19;
     pub const TILE_SIZE: u32 = 32;
     pub const BLOCKED_RATIO: f64 = 0.12;
+    pub const MAX_SPAWN_ATTEMPTS: u32 = 50;
 
     pub fn new(seed: u64) -> Self {
         let mut rng = StdRng::seed_from_u64(seed);
@@ -64,5 +65,25 @@ impl TileMapResource {
         }
         let idx = (row * self.cols + col) as usize;
         self.tiles[idx]
+    }
+
+    pub fn random_walkable_tile(&self, rng: &mut StdRng) -> (u32, u32) {
+        for _ in 0..Self::MAX_SPAWN_ATTEMPTS {
+            let col = rng.gen_range(0..self.cols);
+            let row = rng.gen_range(0..self.rows);
+            if self.is_walkable(col, row) {
+                return (col, row);
+            }
+        }
+
+        for row in 0..self.rows {
+            for col in 0..self.cols {
+                if self.is_walkable(col, row) {
+                    return (col, row);
+                }
+            }
+        }
+
+        (0, 0)
     }
 }

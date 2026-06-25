@@ -1,5 +1,5 @@
 use bevy_ecs::prelude::*;
-use rand::{Rng, SeedableRng};
+use rand::SeedableRng;
 use rand::rngs::StdRng;
 use wasm_bindgen::prelude::*;
 
@@ -24,11 +24,10 @@ pub fn create_game_world(unit_count: u32, seed: u64) -> GameWorld {
 
     let tile_map = TileMapResource::new(seed);
     world.init_resource::<Messages<TargetReached>>();
-    world.insert_resource(tile_map);
 
     for id in 0..unit_count {
-        let x = rng.gen_range(0.0..FIELD_WIDTH);
-        let y = rng.gen_range(0.0..FIELD_HEIGHT);
+        let (col, row) = tile_map.random_walkable_tile(&mut rng);
+        let (x, y) = tile_map.tile_to_world(col, row);
         world.spawn((
             UnitId(id),
             Position { x, y },
@@ -36,6 +35,8 @@ pub fn create_game_world(unit_count: u32, seed: u64) -> GameWorld {
             Speed(DEFAULT_SPEED),
         ));
     }
+
+    world.insert_resource(tile_map);
 
     world.insert_resource(SimulationRng(rng));
 
