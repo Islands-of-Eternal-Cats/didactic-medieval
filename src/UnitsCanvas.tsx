@@ -7,20 +7,42 @@ export type UnitPosition = {
   y: number
 }
 
+export type TileMapData = {
+  cols: number
+  rows: number
+  tiles: string[]
+}
+
 const FIELD_WIDTH = 800
-const FIELD_HEIGHT = 600
+const FIELD_HEIGHT = 608
+const TILE_SIZE = 32
 const UNIT_RADIUS = 4
 const DEFAULT_UNIT_COUNT = 50
+const COLOR_WALKABLE = '#2d5a27'
+const COLOR_BLOCKED = '#1a1a2e'
+const COLOR_UNIT = '#e94560'
 
 function parseUnitPositions(json: string): UnitPosition[] {
   return JSON.parse(json) as UnitPosition[]
 }
 
+function parseTileMap(json: string): TileMapData {
+  return JSON.parse(json) as TileMapData
+}
+
+function drawTileMap(ctx: CanvasRenderingContext2D, map: TileMapData) {
+  for (let row = 0; row < map.rows; row++) {
+    const line = map.tiles[row]
+    for (let col = 0; col < map.cols; col++) {
+      const walkable = line[col] === 'G'
+      ctx.fillStyle = walkable ? COLOR_WALKABLE : COLOR_BLOCKED
+      ctx.fillRect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+    }
+  }
+}
+
 function drawUnits(ctx: CanvasRenderingContext2D, units: UnitPosition[]) {
-  ctx.clearRect(0, 0, FIELD_WIDTH, FIELD_HEIGHT)
-  ctx.fillStyle = '#1a1a2e'
-  ctx.fillRect(0, 0, FIELD_WIDTH, FIELD_HEIGHT)
-  ctx.fillStyle = '#e94560'
+  ctx.fillStyle = COLOR_UNIT
   for (const unit of units) {
     ctx.beginPath()
     ctx.arc(unit.x, unit.y, UNIT_RADIUS, 0, Math.PI * 2)
@@ -60,6 +82,13 @@ export function UnitsCanvas({ seed, onRegenerate }: UnitsCanvasProps) {
     const world = createGameWorld(DEFAULT_UNIT_COUNT, BigInt(seed))
     worldRef.current = world
 
+    const tileMapJson = world.getTileMap()
+    const tileMap = parseTileMap(tileMapJson)
+    drawTileMap(ctx, tileMap)
+
+    const initialUnits = parseUnitPositions(world.getUnitPositions())
+    drawUnits(ctx, initialUnits)
+
     let rafId = 0
     let lastTime = performance.now()
 
@@ -68,6 +97,7 @@ export function UnitsCanvas({ seed, onRegenerate }: UnitsCanvasProps) {
       lastTime = now
       world.tick(deltaMs)
       const units = parseUnitPositions(world.getUnitPositions())
+      drawTileMap(ctx, tileMap)
       drawUnits(ctx, units)
       rafId = requestAnimationFrame(frame)
     }

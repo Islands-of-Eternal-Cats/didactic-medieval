@@ -1,5 +1,6 @@
 mod components;
 mod events;
+mod pathfinding;
 mod resources;
 mod systems;
 mod world;

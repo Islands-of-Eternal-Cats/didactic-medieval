@@ -1,8 +1,68 @@
 use bevy_ecs::prelude::*;
 use rand::rngs::StdRng;
+use rand::Rng;
+use rand::SeedableRng;
 
 #[derive(Resource)]
 pub struct SimulationRng(pub StdRng);
 
 #[derive(Resource)]
 pub struct DeltaTime(pub f32);
+
+#[derive(Resource)]
+pub struct TileMapResource {
+    pub tiles: Vec<bool>,
+    pub cols: u32,
+    pub rows: u32,
+    pub tile_size: u32,
+}
+
+impl TileMapResource {
+    pub const COLS: u32 = 25;
+    pub const ROWS: u32 = 19;
+    pub const TILE_SIZE: u32 = 32;
+    pub const BLOCKED_RATIO: f64 = 0.12;
+
+    pub fn new(seed: u64) -> Self {
+        let mut rng = StdRng::seed_from_u64(seed);
+        let total = (Self::COLS * Self::ROWS) as usize;
+        let blocked_count = (total as f64 * Self::BLOCKED_RATIO).round() as usize;
+        let mut tiles = vec![true; total];
+
+        let mut indices: Vec<usize> = (0..total).collect();
+        for i in (1..total).rev() {
+            let j = rng.gen_range(0..=i);
+            indices.swap(i, j);
+        }
+        for i in 0..blocked_count {
+            tiles[indices[i]] = false;
+        }
+
+        TileMapResource {
+            tiles,
+            cols: Self::COLS,
+            rows: Self::ROWS,
+            tile_size: Self::TILE_SIZE,
+        }
+    }
+
+    pub fn world_to_tile(&self, x: f32, y: f32) -> (u32, u32) {
+        let col = (x / self.tile_size as f32).floor() as u32;
+        let row = (y / self.tile_size as f32).floor() as u32;
+        (col.min(self.cols - 1), row.min(self.rows - 1))
+    }
+
+    pub fn tile_to_world(&self, col: u32, row: u32) -> (f32, f32) {
+        let cx = col as f32 * self.tile_size as f32 + self.tile_size as f32 / 2.0;
+        let cy = row as f32 * self.tile_size as f32 + self.tile_size as f32 / 2.0;
+        (cx, cy)
+    }
+
+    pub fn is_walkable(&self, col: u32, row: u32) -> bool {
+        if col >= self.cols || row >= self.rows {
+            return false;
+        }
+        let idx = (row * self.cols + col) as usize;
+        self.tiles[idx]
+    }
+}

@@ -22,11 +22,11 @@
     "init": "node ./node_modules/@fission-ai/openspec/bin/openspec.js init"
   },
   "dependencies": {
-    "@fission-ai/openspec": "^1.4.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
+    "@fission-ai/openspec": "^1.4.1",
     "@types/node": "^26.0.0",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
