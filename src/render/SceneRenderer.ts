@@ -9,6 +9,7 @@ export const SCENE_HEIGHT = ROWS * RENDER_TILE_SIZE
 
 export type SceneLayers = {
   terrain: Container
+  buildings: Container
   decals: Container
   units: Container
   overlay: Container
@@ -25,6 +26,7 @@ export class SceneRenderer {
     this.root = new Container()
     this.layers = {
       terrain: new Container(),
+      buildings: new Container(),
       decals: new Container(),
       units: new Container(),
       overlay: new Container(),
@@ -32,6 +34,7 @@ export class SceneRenderer {
     this.layers.units.sortableChildren = true
     this.root.addChild(
       this.layers.terrain,
+      this.layers.buildings,
       this.layers.decals,
       this.layers.units,
       this.layers.overlay,

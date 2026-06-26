@@ -3,10 +3,16 @@ use rand::SeedableRng;
 use rand::rngs::StdRng;
 use wasm_bindgen::prelude::*;
 
-use crate::components::{Path, Position, Speed, UnitId};
-use crate::events::TargetReached;
-use crate::resources::{DeltaTime, SimulationRng, TileMapResource};
-use crate::systems::{find_path_action, move_along_path, DEFAULT_SPEED, MAX_DELTA_MS};
+use crate::components::{
+    Energy, HungryDebuff, NeedKind, NeedsPlan, Path, Position, Satiation, Speed, TiredDebuff,
+    UnitId,
+};
+use crate::events::{BuildRequest, Hungry, Rested, Sated, TargetReached, Tired};
+use crate::resources::{DeltaTime, MapObjects, ObjectKind, SimulationRng, TileMapResource};
+use crate::systems::{
+    construction_system, execute_needs_plan, find_path_action, move_along_path, needs_accrual,
+    needs_decision, needs_event_check, DEFAULT_SPEED, MAX_DELTA_MS,
+};
 
 pub const FIELD_WIDTH: f32 = 25.0;
 pub const FIELD_HEIGHT: f32 = 19.0;
@@ -23,7 +29,14 @@ pub fn create_game_world(unit_count: u32, seed: u64) -> GameWorld {
     let mut rng = StdRng::seed_from_u64(seed);
 
     let tile_map = TileMapResource::new(seed);
+    let map_objects = MapObjects::new(tile_map.cols, tile_map.rows);
+
     world.init_resource::<Messages<TargetReached>>();
+    world.init_resource::<Messages<Hungry>>();
+    world.init_resource::<Messages<Tired>>();
+    world.init_resource::<Messages<Sated>>();
+    world.init_resource::<Messages<Rested>>();
+    world.init_resource::<Messages<BuildRequest>>();
 
     for id in 0..unit_count {
         let (col, row) = tile_map.random_walkable_tile(&mut rng);
@@ -33,15 +46,24 @@ pub fn create_game_world(unit_count: u32, seed: u64) -> GameWorld {
             Position { x, y },
             Path { waypoints: Vec::new() },
             Speed(DEFAULT_SPEED),
+            Satiation(100.0),
+            Energy(100.0),
         ));
     }
 
     world.insert_resource(tile_map);
-
+    world.insert_resource(map_objects);
     world.insert_resource(SimulationRng(rng));
 
     let mut schedule = Schedule::default();
-    schedule.add_systems((find_path_action, move_along_path).chain());
+    schedule.add_systems((
+        needs_accrual,
+        needs_event_check,
+        needs_decision,
+        execute_needs_plan,
+        (find_path_action, construction_system),
+        move_along_path,
+    ).chain());
 
     GameWorld { world, schedule }
 }
@@ -57,6 +79,11 @@ impl GameWorld {
         self.world
             .resource_mut::<Messages<TargetReached>>()
             .update();
+        self.world.resource_mut::<Messages<Hungry>>().update();
+        self.world.resource_mut::<Messages<Tired>>().update();
+        self.world.resource_mut::<Messages<Sated>>().update();
+        self.world.resource_mut::<Messages<Rested>>().update();
+        self.world.resource_mut::<Messages<BuildRequest>>().update();
     }
 
     #[wasm_bindgen(js_name = getTileMap)]
@@ -75,6 +102,90 @@ impl GameWorld {
             json.push('"');
         }
         json.push_str("]}");
+        json
+    }
+
+    #[wasm_bindgen(js_name = getUnitStates)]
+    pub fn get_unit_states(&mut self) -> String {
+        let mut json = String::from("[");
+        let mut first = true;
+        let mut query = self.world.query::<(
+            &UnitId,
+            &Satiation,
+            &Energy,
+            Option<&HungryDebuff>,
+            Option<&TiredDebuff>,
+            Option<&NeedsPlan>,
+        )>();
+        for (id, sat, ene, hungry, tired, plan) in query.iter(&self.world) {
+            if !first {
+                json.push(',');
+            }
+            first = false;
+            use std::fmt::Write as _;
+            let plan_str = match plan {
+                Some(p) if p.kind == NeedKind::Eat => "eat",
+                Some(p) if p.kind == NeedKind::Sleep => "sleep",
+                _ => "",
+            };
+            let _ = write!(
+                json,
+                r#"{{"id":{},"satiation":{},"energy":{},"hungry":{},"tired":{},"needsPlan":"{}"}}"#,
+                id.0, sat.0, ene.0, hungry.is_some(), tired.is_some(), plan_str
+            );
+        }
+        json.push(']');
+        json
+    }
+
+    #[wasm_bindgen(js_name = build)]
+    pub fn build(&mut self, col: u32, row: u32, kind: &str) {
+        let object_kind = match kind {
+            "wall" => ObjectKind::Wall,
+            "bed" => ObjectKind::Bed,
+            "campfire" => ObjectKind::Campfire,
+            _ => return,
+        };
+        self.world
+            .resource_mut::<Messages<BuildRequest>>()
+            .write(BuildRequest {
+                col,
+                row,
+                kind: object_kind,
+            });
+    }
+
+    #[wasm_bindgen(js_name = getMapObjects)]
+    pub fn get_map_objects(&self) -> String {
+        let map = self.world.resource::<MapObjects>();
+        let tile_map = self.world.resource::<TileMapResource>();
+        let mut json = String::from("[");
+        let mut first = true;
+        for row in 0..tile_map.rows {
+            for col in 0..tile_map.cols {
+                let idx = (row * tile_map.cols + col) as usize;
+                if idx >= map.tiles.len() {
+                    continue;
+                }
+                if let Some(kind) = &map.tiles[idx] {
+                    if !first {
+                        json.push(',');
+                    }
+                    first = false;
+                    let kind_str = match kind {
+                        ObjectKind::Wall => "wall",
+                        ObjectKind::Bed => "bed",
+                        ObjectKind::Campfire => "campfire",
+                    };
+                    use std::fmt::Write as _;
+                    let _ = write!(
+                        json,
+                        r#"{{"col":{col},"row":{row},"kind":"{kind_str}"}}"#
+                    );
+                }
+            }
+        }
+        json.push(']');
         json
     }
 

@@ -9,6 +9,26 @@ pub struct SimulationRng(pub StdRng);
 #[derive(Resource)]
 pub struct DeltaTime(pub f32);
 
+#[derive(Clone, Copy, PartialEq)]
+pub enum ObjectKind {
+    Wall,
+    Bed,
+    Campfire,
+}
+
+#[derive(Resource)]
+pub struct MapObjects {
+    pub tiles: Vec<Option<ObjectKind>>,
+}
+
+impl MapObjects {
+    pub fn new(cols: u32, rows: u32) -> Self {
+        MapObjects {
+            tiles: vec![None; (cols * rows) as usize],
+        }
+    }
+}
+
 #[derive(Resource)]
 pub struct TileMapResource {
     pub tiles: Vec<bool>,
