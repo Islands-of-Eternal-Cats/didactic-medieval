@@ -7,7 +7,8 @@ import {
 } from './buildInfo'
 import { BuildToolbar } from './BuildToolbar'
 import { SpeedControls } from './SpeedControls'
-import { UnitsCanvas, type BuildMode } from './UnitsCanvas'
+import { UnitsCanvas, type BuildMode, type UnitState } from './UnitsCanvas'
+import { UnitPanel } from './UnitPanel'
 import './App.css'
 
 function App() {
@@ -16,6 +17,8 @@ function App() {
   const [seed, setSeed] = useState(() => Date.now())
   const [buildMode, setBuildMode] = useState<BuildMode>(null)
   const [gameSpeed, setGameSpeed] = useState(1)
+  const [selectedUnitId, setSelectedUnitId] = useState<number | null>(null)
+  const [unitStates, setUnitStates] = useState<UnitState[]>([])
   const prevSpeedRef = useRef(1)
 
   useEffect(() => {
@@ -26,6 +29,7 @@ function App() {
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape') {
       setBuildMode(null)
+      setSelectedUnitId(null)
       return
     }
     if (e.key === ' ') {
@@ -52,7 +56,28 @@ function App() {
       <h1>{greeting}</h1>
       <BuildToolbar mode={buildMode} onSelect={setBuildMode} />
       <SpeedControls gameSpeed={gameSpeed} onChange={setGameSpeed} />
-      <UnitsCanvas seed={seed} buildMode={buildMode} gameSpeed={gameSpeed} onRegenerate={() => setSeed(Date.now())} />
+      <div className="game-area">
+        <UnitsCanvas
+          seed={seed}
+          buildMode={buildMode}
+          gameSpeed={gameSpeed}
+          onRegenerate={() => {
+            setSeed(Date.now())
+            setSelectedUnitId(null)
+          }}
+          selectedUnitId={selectedUnitId}
+          onSelectUnit={setSelectedUnitId}
+          onDeselectUnit={() => setSelectedUnitId(null)}
+          onStateChange={setUnitStates}
+        />
+        {selectedUnitId !== null && (
+          <UnitPanel
+            unitId={selectedUnitId}
+            unitStates={unitStates}
+            onClose={() => setSelectedUnitId(null)}
+          />
+        )}
+      </div>
       {buildInfo && (
         <footer className="build-info">
           <p>{formatBuildLabel(buildInfo.frontend)}</p>

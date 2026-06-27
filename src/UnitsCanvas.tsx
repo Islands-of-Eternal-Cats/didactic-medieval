@@ -13,9 +13,21 @@ export type UnitPosition = {
   y: number
 }
 
+export type UnitState = {
+  id: number
+  satiation: number
+  energy: number
+  hungry: boolean
+  tired: boolean
+  needsPlan: string
+  speed: number
+  assignedJob: { col: number; row: number; kind: string } | null
+}
+
 export type BuildMode = 'wall' | 'bed' | 'campfire' | null
 
 const DEFAULT_UNIT_COUNT = 3
+const HIT_RADIUS = 20
 
 function parseTileMap(json: string): TileMapData {
   return JSON.parse(json) as TileMapData
@@ -25,14 +37,31 @@ function parseUnitPositions(json: string): UnitPosition[] {
   return JSON.parse(json) as UnitPosition[]
 }
 
+function parseUnitStates(json: string): UnitState[] {
+  return JSON.parse(json) as UnitState[]
+}
+
 type UnitsCanvasProps = {
   seed: number
   buildMode: BuildMode
   gameSpeed: number
   onRegenerate: () => void
+  selectedUnitId: number | null
+  onSelectUnit: (id: number) => void
+  onDeselectUnit: () => void
+  onStateChange: (states: UnitState[]) => void
 }
 
-export function UnitsCanvas({ seed, buildMode, gameSpeed, onRegenerate }: UnitsCanvasProps) {
+export function UnitsCanvas({
+  seed,
+  buildMode,
+  gameSpeed,
+  onRegenerate,
+  selectedUnitId: _selectedUnitId,
+  onSelectUnit,
+  onDeselectUnit,
+  onStateChange,
+}: UnitsCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const buildModeRef = useRef<BuildMode>(null)
   const gameSpeedRef = useRef(gameSpeed)
@@ -84,16 +113,42 @@ export function UnitsCanvas({ seed, buildMode, gameSpeed, onRegenerate }: UnitsC
       const canvas = renderer.app.canvas
 
       const handleClick = (e: MouseEvent) => {
-        if (!world || !buildModeRef.current) return
+        if (!world) return
         const rect = canvas.getBoundingClientRect()
         const scaleX = SCENE_WIDTH / rect.width
         const scaleY = SCENE_HEIGHT / rect.height
         const mx = (e.clientX - rect.left) * scaleX
         const my = (e.clientY - rect.top) * scaleY
-        const col = Math.floor(mx / RENDER_TILE_SIZE)
-        const row = Math.floor(my / RENDER_TILE_SIZE)
-        if (col >= 0 && col < 25 && row >= 0 && row < 19) {
-          world.build(col, row, buildModeRef.current)
+
+        if (buildModeRef.current) {
+          const col = Math.floor(mx / RENDER_TILE_SIZE)
+          const row = Math.floor(my / RENDER_TILE_SIZE)
+          if (col >= 0 && col < 25 && row >= 0 && row < 19) {
+            world.build(col, row, buildModeRef.current)
+          }
+          return
+        }
+
+        const worldX = mx / RENDER_TILE_SIZE
+        const worldY = my / RENDER_TILE_SIZE
+        const positions = parseUnitPositions(world.getUnitPositions())
+        let closestId: number | null = null
+        let closestDist = HIT_RADIUS * HIT_RADIUS
+
+        for (const pos of positions) {
+          const dx = worldX - pos.x
+          const dy = worldY - pos.y
+          const dist = dx * dx + dy * dy
+          if (dist < closestDist) {
+            closestDist = dist
+            closestId = pos.id
+          }
+        }
+
+        if (closestId !== null) {
+          onSelectUnit(closestId)
+        } else {
+          onDeselectUnit()
         }
       }
 
@@ -119,7 +174,9 @@ export function UnitsCanvas({ seed, buildMode, gameSpeed, onRegenerate }: UnitsC
           buildings.sync(world.getMapObjects(), world.getConstructionProgress())
         }
         if (statusIcons) {
-          statusIcons.sync(world.getUnitStates(), positions)
+          const statesJson = world.getUnitStates()
+          statusIcons.sync(statesJson, positions)
+          onStateChange(parseUnitStates(statesJson))
         }
       })
     })()

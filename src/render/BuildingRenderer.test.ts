@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { Container, Graphics } from 'pixi.js'
 import { BuildingRenderer, type MapObject, type ConstructionProgress } from './BuildingRenderer'
 

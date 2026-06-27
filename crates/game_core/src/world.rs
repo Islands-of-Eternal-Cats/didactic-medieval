@@ -4,8 +4,8 @@ use rand::rngs::StdRng;
 use wasm_bindgen::prelude::*;
 
 use crate::components::{
-    Energy, HungryDebuff, NeedKind, NeedsPlan, Path, Position, Satiation, Speed, TiredDebuff,
-    UnitId,
+    AssignedJob, Energy, HungryDebuff, NeedKind, NeedsPlan, Path, Position, Satiation, Speed,
+    TiredDebuff, UnitId,
 };
 use crate::events::{BuildRequest, Hungry, Rested, Sated, TargetReached, Tired};
 use crate::resources::{
@@ -116,17 +116,35 @@ impl GameWorld {
 
     #[wasm_bindgen(js_name = getUnitStates)]
     pub fn get_unit_states(&mut self) -> String {
+        let assigned_map: Vec<(Entity, u32, u32, ObjectKind)> = {
+            let queue = self.world.resource::<ConstructionQueue>();
+            queue
+                .jobs
+                .iter()
+                .flat_map(|job| {
+                    let kind = job.kind;
+                    job.assigned_units
+                        .iter()
+                        .map(move |&e| (e, job.col, job.row, kind))
+                })
+                .collect()
+        };
         let mut json = String::from("[");
         let mut first = true;
         let mut query = self.world.query::<(
+            Entity,
             &UnitId,
             &Satiation,
             &Energy,
             Option<&HungryDebuff>,
             Option<&TiredDebuff>,
             Option<&NeedsPlan>,
+            &Speed,
+            Option<&AssignedJob>,
         )>();
-        for (id, sat, ene, hungry, tired, plan) in query.iter(&self.world) {
+        for (entity, id, sat, ene, hungry, tired, plan, speed, assigned) in
+            query.iter(&self.world)
+        {
             if !first {
                 json.push(',');
             }
@@ -137,10 +155,32 @@ impl GameWorld {
                 Some(p) if p.kind == NeedKind::Sleep => "sleep",
                 _ => "",
             };
+            let assigned_job = if assigned.is_some() {
+                let mut job_json = String::from("null");
+                for &(e, col, row, kind) in &assigned_map {
+                    if e == entity {
+                        let kind_str = match kind {
+                            ObjectKind::Wall => "wall",
+                            ObjectKind::Bed => "bed",
+                            ObjectKind::Campfire => "campfire",
+                        };
+                        job_json = String::new();
+                        let _ = write!(
+                            job_json,
+                            r#"{{"col":{},"row":{},"kind":"{}"}}"#,
+                            col, row, kind_str
+                        );
+                        break;
+                    }
+                }
+                job_json
+            } else {
+                String::from("null")
+            };
             let _ = write!(
                 json,
-                r#"{{"id":{},"satiation":{},"energy":{},"hungry":{},"tired":{},"needsPlan":"{}"}}"#,
-                id.0, sat.0, ene.0, hungry.is_some(), tired.is_some(), plan_str
+                r#"{{"id":{},"satiation":{},"energy":{},"hungry":{},"tired":{},"needsPlan":"{}","speed":{},"assignedJob":{}}}"#,
+                id.0, sat.0, ene.0, hungry.is_some(), tired.is_some(), plan_str, speed.0, assigned_job
             );
         }
         json.push(']');
