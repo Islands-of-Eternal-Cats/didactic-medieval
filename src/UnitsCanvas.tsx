@@ -15,7 +15,7 @@ export type UnitPosition = {
 
 export type BuildMode = 'wall' | 'bed' | 'campfire' | null
 
-const DEFAULT_UNIT_COUNT = 50
+const DEFAULT_UNIT_COUNT = 3
 
 function parseTileMap(json: string): TileMapData {
   return JSON.parse(json) as TileMapData
@@ -28,13 +28,16 @@ function parseUnitPositions(json: string): UnitPosition[] {
 type UnitsCanvasProps = {
   seed: number
   buildMode: BuildMode
+  gameSpeed: number
   onRegenerate: () => void
 }
 
-export function UnitsCanvas({ seed, buildMode, onRegenerate }: UnitsCanvasProps) {
+export function UnitsCanvas({ seed, buildMode, gameSpeed, onRegenerate }: UnitsCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const buildModeRef = useRef<BuildMode>(null)
+  const gameSpeedRef = useRef(gameSpeed)
   buildModeRef.current = buildMode
+  gameSpeedRef.current = gameSpeed
   const [hoverCol, setHoverCol] = useState<number | null>(null)
   const [hoverRow, setHoverRow] = useState<number | null>(null)
 
@@ -103,7 +106,8 @@ export function UnitsCanvas({ seed, buildMode, onRegenerate }: UnitsCanvasProps)
 
       renderer.app.ticker.add((ticker) => {
         if (!world) return
-        world.tick(ticker.deltaMS)
+        if (gameSpeedRef.current === 0) return
+        world.tick(ticker.deltaMS * gameSpeedRef.current)
         const positions = parseUnitPositions(world.getUnitPositions())
         for (const pos of positions) {
           const unit = units[pos.id]

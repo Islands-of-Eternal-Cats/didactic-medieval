@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { getProgramName } from '../pkg/game_core'
 import {
   formatBuildLabel,
@@ -6,6 +6,7 @@ import {
   type CombinedBuildInfo,
 } from './buildInfo'
 import { BuildToolbar } from './BuildToolbar'
+import { SpeedControls } from './SpeedControls'
 import { UnitsCanvas, type BuildMode } from './UnitsCanvas'
 import './App.css'
 
@@ -14,6 +15,8 @@ function App() {
   const [buildInfo, setBuildInfo] = useState<CombinedBuildInfo | null>(null)
   const [seed, setSeed] = useState(() => Date.now())
   const [buildMode, setBuildMode] = useState<BuildMode>(null)
+  const [gameSpeed, setGameSpeed] = useState(1)
+  const prevSpeedRef = useRef(1)
 
   useEffect(() => {
     setGreeting(getProgramName())
@@ -23,7 +26,20 @@ function App() {
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape') {
       setBuildMode(null)
+      return
     }
+    if (e.key === ' ') {
+      e.preventDefault()
+      setGameSpeed(prev => {
+        if (prev === 0) return prevSpeedRef.current
+        prevSpeedRef.current = prev
+        return 0
+      })
+      return
+    }
+    if (e.key === '1') { setGameSpeed(1); return }
+    if (e.key === '2') { setGameSpeed(5); return }
+    if (e.key === '3') { setGameSpeed(10); return }
   }, [])
 
   useEffect(() => {
@@ -35,7 +51,8 @@ function App() {
     <main className="app">
       <h1>{greeting}</h1>
       <BuildToolbar mode={buildMode} onSelect={setBuildMode} />
-      <UnitsCanvas seed={seed} buildMode={buildMode} onRegenerate={() => setSeed(Date.now())} />
+      <SpeedControls gameSpeed={gameSpeed} onChange={setGameSpeed} />
+      <UnitsCanvas seed={seed} buildMode={buildMode} gameSpeed={gameSpeed} onRegenerate={() => setSeed(Date.now())} />
       {buildInfo && (
         <footer className="build-info">
           <p>{formatBuildLabel(buildInfo.frontend)}</p>

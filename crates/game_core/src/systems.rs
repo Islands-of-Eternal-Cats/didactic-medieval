@@ -16,7 +16,7 @@ use crate::world::FIELD_WIDTH;
 
 pub const DEFAULT_SPEED: f32 = 3.75;
 pub const ARRIVAL_THRESHOLD: f32 = 0.125;
-pub const MAX_DELTA_MS: f32 = 100.0;
+pub const MAX_DELTA_MS: f32 = 200.0;
 pub const MAX_RETARGET_ATTEMPTS: u32 = 20;
 
 pub const HUNGER_RATE: f32 = 0.8;
@@ -86,6 +86,11 @@ pub fn needs_decision(
     mut commands: Commands,
     map_objects: Res<MapObjects>,
     tile_map: Res<TileMapResource>,
+    debuffs: Query<(Entity, Option<&HungryDebuff>, Option<&TiredDebuff>), With<UnitId>>,
+    needs_query: Query<
+        (Entity, Option<&HungryDebuff>, Option<&TiredDebuff>, Option<&NeedsPlan>),
+        With<UnitId>,
+    >,
 ) {
     for Hungry(entity) in hungry_reader.read() {
         if let Some(target) = find_nearest_object(&map_objects, &tile_map, ObjectKind::Campfire) {
@@ -107,10 +112,58 @@ pub fn needs_decision(
 
     for Sated(entity) in sated_reader.read() {
         commands.entity(*entity).remove::<NeedsPlan>();
+        if let Ok((_, _, tired_debuff)) = debuffs.get(*entity) {
+            if tired_debuff.is_some() {
+                if let Some(target) = find_nearest_object(&map_objects, &tile_map, ObjectKind::Bed)
+                {
+                    commands.entity(*entity).insert(NeedsPlan {
+                        kind: NeedKind::Sleep,
+                        target,
+                    });
+                }
+            }
+        }
     }
 
     for Rested(entity) in rested_reader.read() {
         commands.entity(*entity).remove::<NeedsPlan>();
+        if let Ok((_, hungry_debuff, _)) = debuffs.get(*entity) {
+            if hungry_debuff.is_some() {
+                if let Some(target) =
+                    find_nearest_object(&map_objects, &tile_map, ObjectKind::Campfire)
+                {
+                    commands.entity(*entity).insert(NeedsPlan {
+                        kind: NeedKind::Eat,
+                        target,
+                    });
+                }
+            }
+        }
+    }
+
+    for (entity, hungry_debuff, tired_debuff, plan) in needs_query.iter() {
+        if plan.is_some() {
+            continue;
+        }
+        if tired_debuff.is_some() {
+            if let Some(target) = find_nearest_object(&map_objects, &tile_map, ObjectKind::Bed) {
+                commands.entity(entity).insert(NeedsPlan {
+                    kind: NeedKind::Sleep,
+                    target,
+                });
+                continue;
+            }
+        }
+        if hungry_debuff.is_some() {
+            if let Some(target) =
+                find_nearest_object(&map_objects, &tile_map, ObjectKind::Campfire)
+            {
+                commands.entity(entity).insert(NeedsPlan {
+                    kind: NeedKind::Eat,
+                    target,
+                });
+            }
+        }
     }
 }
 
@@ -368,6 +421,21 @@ pub fn move_along_path(
     let delta_secs = time.0;
 
     for (entity, mut pos, mut path, speed) in query.iter_mut() {
+        if path.waypoints.is_empty() {
+            writer.write(TargetReached { entity });
+            continue;
+        }
+
+        while !path.waypoints.is_empty() {
+            let (wx, wy) = path.waypoints[0];
+            let dx = wx - pos.x;
+            let dy = wy - pos.y;
+            if dx * dx + dy * dy < ARRIVAL_THRESHOLD * ARRIVAL_THRESHOLD {
+                path.waypoints.remove(0);
+            } else {
+                break;
+            }
+        }
         if path.waypoints.is_empty() {
             writer.write(TargetReached { entity });
             continue;
