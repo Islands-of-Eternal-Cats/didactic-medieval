@@ -7,6 +7,10 @@
 ### Requirement: Simulation speed is a state at the App level
 The app SHALL hold a `gameSpeed` state with valid values `0` (pause), `1`, `5`, `10`. Default SHALL be `1`.
 
+#### Scenario: Default speed is 1
+- **WHEN** the app initialises
+- **THEN** `gameSpeed` is `1`
+
 ### Requirement: Keyboard shortcuts toggle speed
 The app SHALL handle the following keyboard events:
 - `Space` — toggle between pause (0) and the previous non-zero speed (or 1 if none)
