@@ -1,10 +1,4 @@
-# Tile Map Rendering
-
-## Purpose
-
-Render the game field using PixiJS by compositing cached tile sprites and unit sprites onto a DPR-aware canvas with nearest-neighbor scaling for pixel-art rendering.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Tile map caching
 The system SHALL pre-build all tile sprites into a static `PIXI.Container` at initialization using textures shared from a single `TextureSource`.

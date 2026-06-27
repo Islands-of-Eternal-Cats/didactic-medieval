@@ -14,27 +14,31 @@
   "author": "",
   "type": "module",
   "scripts": {
-    "build:wasm": "wasm-pack build crates/core --target bundler --out-dir ../../pkg",
-    "dev:wasm": "cargo watch -w crates/core -w .git/HEAD -w .git/refs/heads -s 'wasm-pack build crates/core --target bundler --out-dir ../../pkg'",
+    "build:wasm": "wasm-pack build crates/game_core --target bundler --out-dir ../../pkg",
+    "dev:wasm": "cargo watch -w crates/game_core -w .git/HEAD -w .git/refs/heads -s 'wasm-pack build crates/game_core --target bundler --out-dir ../../pkg'",
     "dev": "npm run build:wasm && concurrently \"npm run dev:wasm\" \"vite\"",
     "build": "npm run build:wasm && tsc -b && vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "preview": "vite preview",
     "init": "node ./node_modules/@fission-ai/openspec/bin/openspec.js init"
   },
   "dependencies": {
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "pixi.js": "^8.19.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "rollup": "^4.62.2"
   },
   "devDependencies": {
     "@fission-ai/openspec": "^1.4.1",
-    "@types/node": "^26.0.0",
-    "@types/react": "^19.1.2",
-    "@types/react-dom": "^19.1.2",
-    "@vitejs/plugin-react": "^4.5.2",
-    "concurrently": "^9.1.2",
-    "typescript": "~5.8.3",
-    "vite": "^6.3.5",
-    "vite-plugin-top-level-await": "^1.6.0",
-    "vite-plugin-wasm": "^3.6.0"
+    "@types/node": "^26.0.1",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.3",
+    "concurrently": "^10.0.3",
+    "typescript": "~6.0.3",
+    "vite": "^8.1.0",
+    "vite-plugin-wasm": "^3.6.0",
+    "vitest": "^4.1.9"
   }
 }

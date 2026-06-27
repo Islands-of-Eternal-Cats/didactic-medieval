@@ -2,7 +2,6 @@ import path from 'node:path'
 import { defineConfig, type Plugin, type ViteDevServer } from 'vite'
 import react from '@vitejs/plugin-react'
 import wasm from 'vite-plugin-wasm'
-import topLevelAwait from 'vite-plugin-top-level-await'
 import { gitBuildVersion } from './scripts/git-build-version'
 
 const VIRTUAL_FRONTEND_BUILD_INFO = 'virtual:frontend-build-info'
@@ -66,5 +65,5 @@ function frontendBuildInfoPlugin(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [frontendBuildInfoPlugin(), react(), wasm(), topLevelAwait()],
+  plugins: [frontendBuildInfoPlugin(), react(), wasm()],
 })

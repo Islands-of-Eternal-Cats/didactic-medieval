@@ -1,10 +1,4 @@
-# Pixel Art Units
-
-## Purpose
-
-Generate procedural pixel-art sprite sheets for game units (knights) with configurable colors and walking animation frames. TBD: extend to support additional unit types.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Knight sprite generation
 The system SHALL generate 16×16 pixel-art knight sprites with configurable primary color, walking animation frame, and facing direction.
