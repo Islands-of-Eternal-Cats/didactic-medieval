@@ -161,7 +161,13 @@ export function UnitsCanvas({
 
       renderer.app.ticker.add((ticker) => {
         if (!world) return
-        if (gameSpeedRef.current === 0) return
+        if (gameSpeedRef.current === 0) {
+          world.tick(0)
+          if (buildings) {
+            buildings.sync(world.getMapObjects(), world.getConstructionProgress())
+          }
+          return
+        }
         world.tick(ticker.deltaMS * gameSpeedRef.current)
         const positions = parseUnitPositions(world.getUnitPositions())
         for (const pos of positions) {
