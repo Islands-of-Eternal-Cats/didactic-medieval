@@ -14,10 +14,12 @@
   "author": "",
   "type": "module",
   "scripts": {
-    "build:wasm": "wasm-pack build crates/core --target bundler --out-dir ../../pkg",
-    "dev:wasm": "cargo watch -w crates/core -w .git/HEAD -w .git/refs/heads -s 'wasm-pack build crates/core --target bundler --out-dir ../../pkg'",
+    "build:wasm": "wasm-pack build crates/game_core --target bundler --out-dir ../../pkg",
+    "dev:wasm": "cargo watch -w crates/game_core -w .git/HEAD -w .git/refs/heads -s 'wasm-pack build crates/game_core --target bundler --out-dir ../../pkg'",
     "dev": "npm run build:wasm && concurrently \"npm run dev:wasm\" \"vite\"",
     "build": "npm run build:wasm && tsc -b && vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "preview": "vite preview",
     "init": "node ./node_modules/@fission-ai/openspec/bin/openspec.js init"
   },
@@ -36,6 +38,7 @@
     "concurrently": "^10.0.3",
     "typescript": "~6.0.3",
     "vite": "^8.1.0",
-    "vite-plugin-wasm": "^3.6.0"
+    "vite-plugin-wasm": "^3.6.0",
+    "vitest": "^4.1.9"
   }
 }

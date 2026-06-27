@@ -8,10 +8,14 @@ use crate::components::{
     UnitId,
 };
 use crate::events::{BuildRequest, Hungry, Rested, Sated, TargetReached, Tired};
-use crate::resources::{DeltaTime, MapObjects, ObjectKind, SimulationRng, TileMapResource};
+use crate::resources::{
+    ConstructionQueue, DeltaTime, MapObjects, MapTileObject, ObjectKind, SimulationRng,
+    TileMapResource,
+};
 use crate::systems::{
-    construction_system, execute_needs_plan, find_path_action, move_along_path, needs_accrual,
-    needs_decision, needs_event_check, DEFAULT_SPEED, MAX_DELTA_MS,
+    construction_progress_system, construction_system, execute_needs_plan, find_path_action,
+    job_assignment_system, move_along_path, needs_accrual, needs_decision, needs_event_check,
+    release_job_on_needs, DEFAULT_SPEED, MAX_DELTA_MS,
 };
 
 pub const FIELD_WIDTH: f32 = 25.0;
@@ -38,6 +42,8 @@ pub fn create_game_world(unit_count: u32, seed: u64) -> GameWorld {
     world.init_resource::<Messages<Rested>>();
     world.init_resource::<Messages<BuildRequest>>();
 
+    world.insert_resource(ConstructionQueue::new());
+
     for id in 0..unit_count {
         let (col, row) = tile_map.random_walkable_tile(&mut rng);
         let (x, y) = tile_map.tile_to_world(col, row);
@@ -61,7 +67,10 @@ pub fn create_game_world(unit_count: u32, seed: u64) -> GameWorld {
         needs_event_check,
         needs_decision,
         execute_needs_plan,
+        release_job_on_needs,
         (find_path_action, construction_system),
+        job_assignment_system,
+        construction_progress_system,
         move_along_path,
     ).chain());
 
@@ -167,23 +176,63 @@ impl GameWorld {
                 if idx >= map.tiles.len() {
                     continue;
                 }
-                if let Some(kind) = &map.tiles[idx] {
+                if let Some(obj) = &map.tiles[idx] {
                     if !first {
                         json.push(',');
                     }
                     first = false;
-                    let kind_str = match kind {
-                        ObjectKind::Wall => "wall",
-                        ObjectKind::Bed => "bed",
-                        ObjectKind::Campfire => "campfire",
-                    };
-                    use std::fmt::Write as _;
-                    let _ = write!(
-                        json,
-                        r#"{{"col":{col},"row":{row},"kind":"{kind_str}"}}"#
-                    );
+                    match obj {
+                        MapTileObject::Building(kind) => {
+                            let kind_str = match kind {
+                                ObjectKind::Wall => "wall",
+                                ObjectKind::Bed => "bed",
+                                ObjectKind::Campfire => "campfire",
+                            };
+                            use std::fmt::Write as _;
+                            let _ = write!(
+                                json,
+                                r#"{{"col":{col},"row":{row},"kind":"{kind_str}"}}"#
+                            );
+                        }
+                        MapTileObject::ConstructionSite(kind) => {
+                            let kind_str = match kind {
+                                ObjectKind::Wall => "wall",
+                                ObjectKind::Bed => "bed",
+                                ObjectKind::Campfire => "campfire",
+                            };
+                            use std::fmt::Write as _;
+                            let _ = write!(
+                                json,
+                                r#"{{"col":{col},"row":{row},"kind":"ConstructionSite","underlying":"{kind_str}"}}"#
+                            );
+                        }
+                    }
                 }
             }
+        }
+        json.push(']');
+        json
+    }
+
+    #[wasm_bindgen(js_name = getConstructionProgress)]
+    pub fn get_construction_progress(&self) -> String {
+        let queue = self.world.resource::<ConstructionQueue>();
+        let mut json = String::from("[");
+        for (i, job) in queue.jobs.iter().enumerate() {
+            if i > 0 {
+                json.push(',');
+            }
+            let kind_str = match job.kind {
+                ObjectKind::Wall => "wall",
+                ObjectKind::Bed => "bed",
+                ObjectKind::Campfire => "campfire",
+            };
+            use std::fmt::Write as _;
+            let _ = write!(
+                json,
+                r#"{{"col":{},"row":{},"progress":{},"maxProgress":{},"kind":"{}"}}"#,
+                job.col, job.row, job.progress, job.max_progress, kind_str
+            );
         }
         json.push(']');
         json

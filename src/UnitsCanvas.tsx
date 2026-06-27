@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { createGameWorld, type GameWorld } from '../pkg/core'
+import { createGameWorld, type GameWorld } from '../pkg/game_core'
 import { SceneRenderer, SCENE_WIDTH, SCENE_HEIGHT, RENDER_TILE_SIZE } from './render/SceneRenderer'
 import { loadTileTextures } from './render/textures'
 import { buildTerrain, type TileMapData } from './render/terrain'
@@ -112,7 +112,7 @@ export function UnitsCanvas({ seed, buildMode, onRegenerate }: UnitsCanvasProps)
           }
         }
         if (buildings) {
-          buildings.sync(world.getMapObjects())
+          buildings.sync(world.getMapObjects(), world.getConstructionProgress())
         }
         if (statusIcons) {
           statusIcons.sync(world.getUnitStates(), positions)

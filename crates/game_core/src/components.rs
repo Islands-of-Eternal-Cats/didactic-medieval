@@ -40,3 +40,6 @@ pub enum NeedKind {
     Eat,
     Sleep,
 }
+
+#[derive(Component)]
+pub struct AssignedJob;

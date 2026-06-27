@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { getProgramName } from '../pkg/core'
+import { getProgramName } from '../pkg/game_core'
 import {
   formatBuildLabel,
   getBuildInfo,

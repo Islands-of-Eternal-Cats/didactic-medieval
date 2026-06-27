@@ -1,5 +1,5 @@
 import frontendBuildInfo from 'virtual:frontend-build-info'
-import { getCoreBuildInfo } from '../pkg/core'
+import { getCoreBuildInfo } from '../pkg/game_core'
 
 export type BuildInfo = {
   layer: 'frontend' | 'core'

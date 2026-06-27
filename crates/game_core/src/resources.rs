@@ -9,16 +9,22 @@ pub struct SimulationRng(pub StdRng);
 #[derive(Resource)]
 pub struct DeltaTime(pub f32);
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ObjectKind {
     Wall,
     Bed,
     Campfire,
 }
 
+#[derive(Clone, Copy, PartialEq)]
+pub enum MapTileObject {
+    Building(ObjectKind),
+    ConstructionSite(ObjectKind),
+}
+
 #[derive(Resource)]
 pub struct MapObjects {
-    pub tiles: Vec<Option<ObjectKind>>,
+    pub tiles: Vec<Option<MapTileObject>>,
 }
 
 impl MapObjects {
@@ -102,5 +108,26 @@ impl TileMapResource {
         }
 
         (0, 0)
+    }
+}
+
+#[derive(Clone)]
+pub struct ConstructionJob {
+    pub col: u32,
+    pub row: u32,
+    pub kind: ObjectKind,
+    pub progress: f32,
+    pub max_progress: f32,
+    pub assigned_units: Vec<Entity>,
+}
+
+#[derive(Resource)]
+pub struct ConstructionQueue {
+    pub jobs: Vec<ConstructionJob>,
+}
+
+impl ConstructionQueue {
+    pub fn new() -> Self {
+        ConstructionQueue { jobs: Vec::new() }
     }
 }
