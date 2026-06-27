@@ -30,4 +30,4 @@
 
 - [x] 5.1 `wasm-pack build` succeeds with no errors
 - [x] 5.2 TypeScript compilation succeeds (tileMapRenderer.ts — предсуществующий мёртвый файл, не связан с изменениями)
-- [ ] 5.3 Manual test: place building → construction site appears → colonist walks to it → building completes
+- [x] 5.3 Manual test: place building → construction site appears → colonist walks to it → building completes
