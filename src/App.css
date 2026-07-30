@@ -1,0 +1,199 @@
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+.app h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.units-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.units-canvas {
+  display: block;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+.build-toolbar {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.build-toolbar button {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+}
+
+.build-toolbar button.active {
+  background: rgba(100, 180, 255, 0.25);
+  border-color: rgba(100, 180, 255, 0.6);
+}
+
+.build-toolbar .cancel-btn {
+  border-color: rgba(255, 80, 80, 0.4);
+  color: #ff6b6b;
+}
+
+.build-hint {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin-top: 0.25rem;
+}
+
+.regenerate-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+}
+
+.regenerate-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.speed-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.speed-controls button {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+}
+
+.speed-controls button.active {
+  background: rgba(100, 180, 255, 0.25);
+  border-color: rgba(100, 180, 255, 0.6);
+}
+
+.game-area {
+  position: relative;
+  display: inline-block;
+}
+
+.unit-panel {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 220px;
+  background: rgba(10, 10, 10, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 10px 12px;
+  backdrop-filter: blur(4px);
+  z-index: 10;
+  color: #fff;
+}
+
+.unit-panel-close {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.2rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+
+.unit-panel-close:hover {
+  color: #fff;
+}
+
+.unit-panel-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.unit-panel-id {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 2px;
+}
+
+.unit-panel-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+}
+
+.unit-panel-label {
+  opacity: 0.6;
+  min-width: 50px;
+  flex-shrink: 0;
+}
+
+.unit-panel-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.unit-panel-fill {
+  height: 100%;
+  border-radius: 4px;
+}
+
+.unit-panel-fill-food {
+  background: #e8a838;
+}
+
+.unit-panel-fill-energy {
+  background: #4488ff;
+}
+
+.unit-panel-value {
+  min-width: 30px;
+  text-align: right;
+  font-size: 0.8rem;
+}
+
+.unit-panel-info {
+  display: flex;
+  gap: 6px;
+  font-size: 0.8rem;
+}
+
+.build-info {
+  font-size: 0.85rem;
+  opacity: 0.7;
+  text-align: center;
+}
+
+.build-info p {
+  margin: 0.25rem 0;
+}
